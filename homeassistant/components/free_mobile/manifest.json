@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": [],
+  "requirements": ["freesms==0.3.0"],
   "ssdp": [],
   "zeroconf": []
 }
