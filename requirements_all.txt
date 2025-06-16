@@ -969,9 +969,6 @@ fortiosapi==1.0.5
 # homeassistant.components.freebox
 freebox-api==1.2.2
 
-# homeassistant.components.free_mobile
-freesms==0.2.0
-
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.14.0

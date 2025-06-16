@@ -2,8 +2,13 @@
   "domain": "free_mobile",
   "name": "Free Mobile",
   "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/free_mobile",
+  "homekit": {},
   "iot_class": "cloud_push",
-  "loggers": ["freesms"],
-  "quality_scale": ""
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
 }
