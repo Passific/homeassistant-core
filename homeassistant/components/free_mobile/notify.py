@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import FreeMobileConfigEntry, FreeMobileData
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
@@ -24,13 +26,13 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> FreeSMSNotificationService:
     """Get the Free Mobile SMS notification service."""
-    return FreeSMSNotificationService(config[CONF_USERNAME], config[CONF_ACCESS_TOKEN])
+    return FreeSMSNotificationService(config.get(CONF_USERNAME), config.get(CONF_ACCESS_TOKEN))
 
 
 class FreeSMSNotificationService(BaseNotificationService):
