@@ -105,18 +105,12 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
-        # Extend bills range: one month before for last paid, one month ahead for next expected
+        # Start one month back to capture last-month paid_dates; end at last day of current month for pay_dates
         bills_start_date = (start_date - timedelta(days=1)).replace(day=1)
         if now.month == 12:
-            bills_end_date = now.replace(year=now.year + 1, month=1, day=31)
+            bills_end_date = now.replace(year=now.year + 1, month=1, day=1) - timedelta(days=1)
         else:
-            next_month = now.month + 1
-            if next_month == 12:
-                bills_end_date = now.replace(month=12, day=31)
-            else:
-                bills_end_date = now.replace(
-                    month=next_month + 1, day=1
-                ) - timedelta(days=1)
+            bills_end_date = now.replace(month=now.month + 1, day=1) - timedelta(days=1)
 
         try:
             (

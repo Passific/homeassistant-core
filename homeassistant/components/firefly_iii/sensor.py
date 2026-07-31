@@ -314,15 +314,7 @@ class FireflySubscriptionNextExpectedSensor(FireflyBillBaseEntity, SensorEntity)
 
     @property
     def native_value(self) -> datetime | None:
-        """Return the next expected match date (first future pay_date or next_expected_match)."""
-        now = datetime.now(tz=UTC)
-        pay_dates = self._bill.attributes.pay_dates
-        if pay_dates:
-            for date_str in pay_dates:
-                dt = _parse_timestamp(date_str)
-                if dt and dt >= now:
-                    return dt
-
+        """Return the next expected match date as computed by the API."""
         value = self._bill.attributes.next_expected_match
         if not value:
             return None
@@ -337,11 +329,16 @@ class FireflySubscriptionLastPaidSensor(FireflyBillBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> datetime | None:
-        """Return the last paid date."""
+        """Return the most recent paid date from the paid_dates array."""
         paid_dates = self._bill.attributes.paid_dates
-        if paid_dates and paid_dates[-1].date:
-            return _parse_timestamp(paid_dates[-1].date)
-        return None
+        if not paid_dates:
+            return None
+        parsed = [
+            dt
+            for pd in paid_dates
+            if pd.date and (dt := _parse_timestamp(pd.date))
+        ]
+        return max(parsed) if parsed else None
 
 
 class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
@@ -376,7 +373,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return the total expected amount for bills due this month.""
+        """Return the total expected amount for bills due this month."""
         now = datetime.now(tz=UTC)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if now.month == 12:
