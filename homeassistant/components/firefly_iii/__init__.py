@@ -1,6 +1,7 @@
 """The Firefly III integration."""
 
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 from homeassistant.const import Platform
@@ -68,6 +69,19 @@ def _async_migrate_entity_entry(
 
 
 @callback
+def _async_migrate_legacy_unique_id(
+    entry_id: str, entity_entry: er.RegistryEntry
+) -> dict[str, Any] | None:
+    """Migrate unique_ids that were built from the (always-empty) config entry unique_id."""
+    if entity_entry.unique_id is None or not entity_entry.unique_id.startswith(
+        "None_"
+    ):
+        return None
+
+    return {"new_unique_id": f"{entry_id}{entity_entry.unique_id.removeprefix('None')}"}
+
+
+@callback
 def _async_remove_orphaned_devices(hass: HomeAssistant, entry_id: str) -> None:
     """Remove Firefly III devices without entities for this config entry."""
     device_registry = dr.async_get(hass)
@@ -86,6 +100,9 @@ def _async_remove_orphaned_devices(hass: HomeAssistant, entry_id: str) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> bool:
     """Set up Firefly III from a config entry."""
 
+    await er.async_migrate_entries(
+        hass, entry.entry_id, partial(_async_migrate_legacy_unique_id, entry.entry_id)
+    )
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrate_entity_entry)
 
     coordinator = FireflyDataUpdateCoordinator(hass, entry)

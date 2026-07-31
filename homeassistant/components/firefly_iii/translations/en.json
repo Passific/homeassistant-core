@@ -93,6 +93,9 @@
     },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Firefly III instance: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Firefly III instance: {error}"
     }
   }
 }

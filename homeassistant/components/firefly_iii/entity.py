@@ -1,5 +1,7 @@
 """Base entity for Firefly III integration."""
 
+from typing import override
+
 from pyfirefly.models import Account, Bill, Budget, Category
 from yarl import URL
 
@@ -53,7 +55,7 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
             },
         )
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_account_{account.id}_{key}"
+            f"{coordinator.config_entry.entry_id}_account_{account.id}_{key}"
         )
         self._attr_translation_placeholders = {
             "name": account.attributes.name or ""
@@ -62,6 +64,12 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
     @property
     def _account(self) -> Account:
         return self.coordinator.data.accounts[self._account_id]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._account_id in self.coordinator.data.accounts
 
 
 class FireflyCategoryBaseEntity(FireflyBaseEntity):
@@ -86,7 +94,7 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
             },
         )
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_category_{category.id}_{key}"
+            f"{coordinator.config_entry.entry_id}_category_{category.id}_{key}"
         )
         self._attr_translation_placeholders = {
             "name": category.attributes.name or ""
@@ -95,6 +103,15 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
     @property
     def _category(self) -> Category:
         return self.coordinator.data.category_details[self._category_id]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            super().available
+            and self._category_id in self.coordinator.data.category_details
+        )
 
 
 class FireflyBudgetBaseEntity(FireflyBaseEntity):
@@ -119,13 +136,19 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
             },
         )
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_budget_{budget.id}_{key}"
+            f"{coordinator.config_entry.entry_id}_budget_{budget.id}_{key}"
         )
         self._attr_translation_placeholders = {"name": budget.attributes.name or ""}
 
     @property
     def _budget(self) -> Budget:
         return self.coordinator.data.budgets[self._budget_id]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._budget_id in self.coordinator.data.budgets
 
 
 class FireflyBillBaseEntity(FireflyBaseEntity):
@@ -150,10 +173,16 @@ class FireflyBillBaseEntity(FireflyBaseEntity):
             },
         )
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_bill_{bill.id}_{key}"
+            f"{coordinator.config_entry.entry_id}_bill_{bill.id}_{key}"
         )
         self._attr_translation_placeholders = {"name": bill.attributes.name or ""}
 
     @property
     def _bill(self) -> Bill:
         return self.coordinator.data.bills[self._bill_id]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._bill_id in self.coordinator.data.bills

@@ -135,6 +135,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
         reconf_entry = self._get_reconfigure_entry()
 
         if user_input:
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
                 await _validate_input(
                     self.hass,
@@ -153,7 +154,6 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={

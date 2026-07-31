@@ -1,7 +1,7 @@
 """Sensor platform for Firefly III integration."""
 
 from datetime import UTC, datetime
-from typing import override
+from typing import Any, override
 
 from pyfirefly.models import Account, Bill, Budget, Category
 from yarl import URL
@@ -16,6 +16,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
@@ -365,7 +366,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
         """Initialize the subscription total expected sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_subscriptions_total_expected"
+            f"{coordinator.config_entry.entry_id}_subscriptions_total_expected"
         )
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
@@ -383,7 +384,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the total expected amount for bills due this month."""
-        now = datetime.now(tz=UTC)
+        now = dt_util.now()
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if now.month == 12:
             month_end = now.replace(year=now.year + 1, month=1, day=1)
@@ -428,7 +429,7 @@ class FireflySubscriptionAlreadyPaidSensor(FireflyBaseEntity, SensorEntity):
         """Initialize the subscription already paid sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_subscriptions_already_paid"
+            f"{coordinator.config_entry.entry_id}_subscriptions_already_paid"
         )
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
