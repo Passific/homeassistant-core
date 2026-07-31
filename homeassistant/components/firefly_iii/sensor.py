@@ -394,18 +394,22 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
             attrs = bill.attributes
             if not attrs.active:
                 continue
-            pay_dates = attrs.pay_dates
-            if pay_dates and any(
+            # A bill is "expected this month" if it was paid this month OR scheduled this month.
+            # Paid-early bills have pay_dates pointing to next month, so paid_dates is the only signal.
+            was_paid = bool(attrs.paid_dates)
+            scheduled_this_month = attrs.pay_dates and any(
                 month_start <= dt < month_end
-                for d in pay_dates
+                for d in attrs.pay_dates
                 if (dt := _parse_timestamp(d))
-            ):
-                if attrs.amount_min is not None and attrs.amount_max is not None:
-                    total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
-                elif attrs.amount_min is not None:
-                    total += float(attrs.amount_min)
-                elif attrs.amount_max is not None:
-                    total += float(attrs.amount_max)
+            )
+            if not was_paid and not scheduled_this_month:
+                continue
+            if attrs.amount_min is not None and attrs.amount_max is not None:
+                total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
+            elif attrs.amount_min is not None:
+                total += float(attrs.amount_min)
+            elif attrs.amount_max is not None:
+                total += float(attrs.amount_max)
         return total
 
 
