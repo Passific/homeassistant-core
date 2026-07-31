@@ -60,6 +60,7 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
         self._attr_translation_placeholders = {
             "name": account.attributes.name or ""
         }
+        self.entity_id = f"sensor.account_{account.id}_{key}"
 
     @property
     def _account(self) -> Account:
@@ -99,6 +100,7 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
         self._attr_translation_placeholders = {
             "name": category.attributes.name or ""
         }
+        self.entity_id = f"sensor.category_{category.id}_{key}"
 
     @property
     def _category(self) -> Category:
@@ -139,6 +141,7 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
             f"{coordinator.config_entry.entry_id}_budget_{budget.id}_{key}"
         )
         self._attr_translation_placeholders = {"name": budget.attributes.name or ""}
+        self.entity_id = f"sensor.budget_{budget.id}_{key}"
 
     @property
     def _budget(self) -> Budget:
@@ -176,6 +179,7 @@ class FireflyBillBaseEntity(FireflyBaseEntity):
             f"{coordinator.config_entry.entry_id}_bill_{bill.id}_{key}"
         )
         self._attr_translation_placeholders = {"name": bill.attributes.name or ""}
+        self.entity_id = f"sensor.bill_{bill.id}_{key}"
 
     @property
     def _bill(self) -> Bill:
