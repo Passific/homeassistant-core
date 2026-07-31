@@ -105,12 +105,6 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
-        # Start one month back to capture last-month paid_dates; end at last day of current month for pay_dates
-        bills_start_date = (start_date - timedelta(days=1)).replace(day=1)
-        if now.month == 12:
-            bills_end_date = now.replace(year=now.year + 1, month=1, day=1) - timedelta(days=1)
-        else:
-            bills_end_date = now.replace(month=now.month + 1, day=1) - timedelta(days=1)
 
         try:
             (
@@ -124,7 +118,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 self.firefly.get_categories(),
                 self.firefly.get_currency_primary(),
                 self.firefly.get_budgets(start=start_date, end=end_date),
-                self.firefly.get_bills(start=bills_start_date, end=bills_end_date),
+                self.firefly.get_bills(),
             )
 
             category_details_list, budget_limits_list = await asyncio.gather(
