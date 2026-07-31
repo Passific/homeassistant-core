@@ -296,8 +296,14 @@ class FireflySubscriptionAmountSensor(FireflyBillBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the average expected subscription amount."""
-        avg = self._bill.attributes.amount_avg
-        return float(avg) if avg is not None else None
+        attrs = self._bill.attributes
+        if attrs.amount_min is not None and attrs.amount_max is not None:
+            return (float(attrs.amount_min) + float(attrs.amount_max)) / 2
+        if attrs.amount_min is not None:
+            return float(attrs.amount_min)
+        if attrs.amount_max is not None:
+            return float(attrs.amount_max)
+        return None
 
 
 class FireflySubscriptionNextExpectedSensor(FireflyBillBaseEntity, SensorEntity):
@@ -308,11 +314,20 @@ class FireflySubscriptionNextExpectedSensor(FireflyBillBaseEntity, SensorEntity)
 
     @property
     def native_value(self) -> datetime | None:
-        """Return the next expected match date as computed by the API."""
-        value = self._bill.attributes.next_expected_match
-        if not value:
-            return None
-        return _parse_timestamp(value)
+        """Return the next occurrence: first future pay_date, or next_expected_match if overdue."""
+        now = datetime.now(tz=UTC)
+        attrs = self._bill.attributes
+        if attrs.pay_dates:
+            future = [
+                dt
+                for d in attrs.pay_dates
+                if (dt := _parse_timestamp(d)) and dt > now
+            ]
+            if future:
+                return min(future)
+        if attrs.next_expected_match:
+            return _parse_timestamp(attrs.next_expected_match)
+        return None
 
 
 class FireflySubscriptionLastPaidSensor(FireflyBillBaseEntity, SensorEntity):
@@ -377,7 +392,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
         total = 0.0
         for bill in self.coordinator.data.bills.values():
             attrs = bill.attributes
-            if not attrs.active or attrs.amount_avg is None:
+            if not attrs.active:
                 continue
             pay_dates = attrs.pay_dates
             if pay_dates and any(
@@ -385,7 +400,12 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
                 for d in pay_dates
                 if (dt := _parse_timestamp(d))
             ):
-                total += float(attrs.amount_avg)
+                if attrs.amount_min is not None and attrs.amount_max is not None:
+                    total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
+                elif attrs.amount_min is not None:
+                    total += float(attrs.amount_min)
+                elif attrs.amount_max is not None:
+                    total += float(attrs.amount_max)
         return total
 
 
@@ -426,9 +446,14 @@ class FireflySubscriptionAlreadyPaidSensor(FireflyBaseEntity, SensorEntity):
         for bill in self.coordinator.data.bills.values():
             attrs = bill.attributes
             # paid_dates is already scoped to the queried month range
-            if not attrs.active or attrs.amount_avg is None or not attrs.paid_dates:
+            if not attrs.active or not attrs.paid_dates:
                 continue
-            total += float(attrs.amount_avg)
+            if attrs.amount_min is not None and attrs.amount_max is not None:
+                total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
+            elif attrs.amount_min is not None:
+                total += float(attrs.amount_min)
+            elif attrs.amount_max is not None:
+                total += float(attrs.amount_max)
         return total
 
 
