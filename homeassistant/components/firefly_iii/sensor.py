@@ -295,15 +295,9 @@ class FireflySubscriptionAmountSensor(FireflyBillBaseEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return the expected subscription amount (average of min and max)."""
-        attrs = self._bill.attributes
-        if attrs.amount_min is not None and attrs.amount_max is not None:
-            return (float(attrs.amount_min) + float(attrs.amount_max)) / 2
-        if attrs.amount_min is not None:
-            return float(attrs.amount_min)
-        if attrs.amount_max is not None:
-            return float(attrs.amount_max)
-        return None
+        """Return the average expected subscription amount."""
+        avg = self._bill.attributes.amount_avg
+        return float(avg) if avg is not None else None
 
 
 class FireflySubscriptionNextExpectedSensor(FireflyBillBaseEntity, SensorEntity):
@@ -383,7 +377,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
         total = 0.0
         for bill in self.coordinator.data.bills.values():
             attrs = bill.attributes
-            if not attrs.active:
+            if not attrs.active or attrs.amount_avg is None:
                 continue
             pay_dates = attrs.pay_dates
             if pay_dates and any(
@@ -391,12 +385,7 @@ class FireflySubscriptionTotalExpectedSensor(FireflyBaseEntity, SensorEntity):
                 for d in pay_dates
                 if (dt := _parse_timestamp(d))
             ):
-                if attrs.amount_min is not None and attrs.amount_max is not None:
-                    total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
-                elif attrs.amount_min is not None:
-                    total += float(attrs.amount_min)
-                elif attrs.amount_max is not None:
-                    total += float(attrs.amount_max)
+                total += float(attrs.amount_avg)
         return total
 
 
@@ -433,25 +422,13 @@ class FireflySubscriptionAlreadyPaidSensor(FireflyBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return total expected amount of bills that have been paid this month."""
-        now = datetime.now(tz=UTC)
-        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         total = 0.0
         for bill in self.coordinator.data.bills.values():
             attrs = bill.attributes
-            if not attrs.active:
+            # paid_dates is already scoped to the queried month range
+            if not attrs.active or attrs.amount_avg is None or not attrs.paid_dates:
                 continue
-            paid_dates = attrs.paid_dates
-            if paid_dates and any(
-                dt >= month_start
-                for pd in paid_dates
-                if pd.date and (dt := _parse_timestamp(pd.date))
-            ):
-                if attrs.amount_min is not None and attrs.amount_max is not None:
-                    total += (float(attrs.amount_min) + float(attrs.amount_max)) / 2
-                elif attrs.amount_min is not None:
-                    total += float(attrs.amount_min)
-                elif attrs.amount_max is not None:
-                    total += float(attrs.amount_max)
+            total += float(attrs.amount_avg)
         return total
 
 

@@ -118,7 +118,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 self.firefly.get_categories(),
                 self.firefly.get_currency_primary(),
                 self.firefly.get_budgets(start=start_date, end=end_date),
-                self.firefly.get_bills(),
+                self.firefly.get_bills(start=start_date, end=end_date),
             )
 
             category_details_list, budget_limits_list = await asyncio.gather(
@@ -163,7 +163,11 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             ) from err
 
         return FireflyCoordinatorData(
-            accounts={account.id: account for account in accounts},
+            accounts={
+                account.id: account
+                for account in accounts
+                if account.attributes.type == "asset"
+            },
             categories=categories,
             category_details={
                 category.id: category for category in category_details_list
