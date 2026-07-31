@@ -1,7 +1,7 @@
 """Sensor platform for Firefly III integration."""
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import override
 
 from pyfirefly.models import Account, Bill, Budget, Category
 from yarl import URL
@@ -120,6 +120,7 @@ class FireflyAccountBalanceSensor(FireflyAccountBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return current account balance."""
         return self._account.attributes.current_balance
@@ -160,6 +161,7 @@ class FireflyCategorySensor(FireflyCategoryBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return net spent+earned value for this category in the period."""
         spent_items = self._category.attributes.spent or []
@@ -189,6 +191,7 @@ class FireflyBudgetSpentSensor(FireflyBudgetBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return spent value for this budget in the period."""
         spent_items = self._budget.attributes.spent or []
